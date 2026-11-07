@@ -49,7 +49,9 @@ function App() {
           aria-controls="experience-panel"
           onClick={() => setExperienceOpen((open) => !open)}
         >
-          {experienceOpen ? '⌃' : '⌄'}
+          <svg className="chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+            <path d="M3.5 6 8 10.5 12.5 6" />
+          </svg>
           <span className="sr-only">{experienceOpen ? 'Hide' : 'Show'} experience</span>
         </button>
       </section>
