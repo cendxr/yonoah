@@ -6,6 +6,8 @@
   font-family: "Instrument Sans", "Instrument Sans Fallback", -apple-system, system-ui, "Helvetica Neue", Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  /* Single source of truth for the expanded Experience panel height. */
+  --panel-h: 191.875px;
 }
 
 * { box-sizing: border-box; }
@@ -64,7 +66,7 @@ a { color: inherit; }
 .hero { position: relative; display: grid; min-height: 100svh; padding-top: 36px; place-items: center; }
 /* Center in the remaining viewport when the drawer is open instead of
    translating or scaling the wordmark. */
-.experience-open .hero { min-height: calc(100svh - 191.875px); }
+.experience-open .hero { min-height: calc(100svh - var(--panel-h)); }
 .hero-content { position: relative; width: max-content; }
 .wordmark { display: flex; align-items: center; color: #f4f4f4; font-size: 244.8px; font-weight: 600; line-height: 190.944px; letter-spacing: -13.464px; }
 .wordmark > span { display: inline-block; }
@@ -77,9 +79,11 @@ a { color: inherit; }
 @keyframes hero-arrive { from { transform: translateY(10px) scale(.99); } to { transform: translateY(0) scale(1); } }
 
 .experience-toggle { position: absolute; z-index: 4; bottom: 12px; left: 50%; display: grid; width: 34px; height: 34px; padding: 0; place-items: center; border: 0; color: #d4d4d8; background: transparent; font-size: 16px; cursor: pointer; transform: translateX(-50%); }
-.experience { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; display: none; height: 191.875px; padding: 16px 40px 20px; border-top: 1px solid #27272a; background: #000; }
+.experience { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; display: none; height: var(--panel-h); padding: 16px 40px 20px; border-top: 1px solid #27272a; background: #000; }
 .experience.is-open { display: block; animation: panel-in 420ms cubic-bezier(.2,.75,.25,1) both; }
-.experience-open .experience-toggle { bottom: 203.875px; }
+.chevron { display: block; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+/* Closed: points down. Open: points up (unchanged state behavior). */
+.experience-open .chevron { transform: rotate(180deg); }
 @keyframes panel-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 .experience-link { display: grid; width: min(360px, calc(100% - 80px)); min-height: 155.3px; grid-template-columns: auto 1fr; align-content: start; gap: 8px 10px; color: #dedede; text-decoration: none; }
 .experience-name { font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
@@ -99,8 +103,8 @@ a { color: inherit; }
   .wordmark > span:first-child { margin-right: -.04em; }
   .wordmark > span:last-child { margin-left: -.05em; }
   .bio { width: min(100%, 390px); margin: 10px auto 0; font-size: 14px; }
-  .experience { height: min(310px, calc(100svh - 80px)); padding: 20px; overflow: auto; }
-  .experience-open .experience-toggle { bottom: calc(min(310px, (100svh - 80px)) + 12px); }
+  :root { --panel-h: min(310px, calc(100svh - 80px)); }
+  .experience { padding: 20px; overflow: auto; }
   .experience-link { width: min(100%, 360px); }
 }
 
