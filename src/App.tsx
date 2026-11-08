@@ -18,6 +18,11 @@ const positions = [
     description: 'Collective is a Discord security platform focused on helping communities guard against abuse and maintain safer, well-managed servers.',
     href: 'https://discord.gg/GT9WPxm689', logoSrc: '/collective.png',
   },
+  {
+    name: 'Alaska Roleplay', role: 'Owner',
+    description: 'Alaska Roleplay is a community focused on delivering a high-quality roleplay experience, bringing players together to create engaging stories and meaningful interactions.',
+    href: 'https://discord.gg/alaskarp', logoSrc: '/alaska-roleplay.png',
+  },
 ]
 
 const projects = [
