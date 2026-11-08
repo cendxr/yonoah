@@ -294,7 +294,7 @@ html.open .more { grid-template-rows: 1fr; }
   perspective: 1200px;
 }
 .positions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 1.2vw, 42px); }
-.projects { display: grid; grid-template-columns: 1fr; gap: 18px; min-width: 0; padding-left: clamp(24px, 1.35vw, 48px); border-left: 1px solid var(--rule); }
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; padding-left: clamp(24px, 1.35vw, 48px); border-left: 1px solid var(--rule); }
 .strip::before {
   content: "";
   position: absolute;
@@ -337,7 +337,7 @@ html.open .position { animation: flip .9s var(--ease) calc(.15s + var(--i) * 80m
 .project .logo { grid-row: span 2; width: 28px; height: 28px; }
 .project .title { white-space: normal; }
 .project b { font-size: 14px; }
-.project p { grid-column: 2; margin: 1px 0 0; color: var(--body); font-size: 12px; line-height: 1.35; }
+.project p { grid-column: 1 / -1; margin: 1px 0 0; color: var(--body); font-size: 12px; line-height: 1.35; }
 
 @keyframes float { from { transform: translateY(-3px); } to { transform: translateY(4px); } }
 @keyframes land { from { transform: translate(var(--fx), var(--fy)) scale(var(--fs)); } }
