@@ -16,7 +16,7 @@ const positions = [
   {
     name: 'Collective', role: 'Team',
     description: 'Collective is a Discord security platform focused on helping communities guard against abuse and maintain safer, well-managed servers.',
-    logoSrc: '/collective.png',
+    href: 'https://discord.gg/GT9WPxm689', logoSrc: '/collective.png',
   },
 ]
 
