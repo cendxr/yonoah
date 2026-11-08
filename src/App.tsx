@@ -13,6 +13,11 @@ const positions = [
     description: 'Fluid Compact is a design community focused on high-quality graphics, liveries, and general design work. It offers ready-made releases and custom orders, with upcoming bundles bringing together coordinated designs and packages.',
     href: 'https://discord.gg/Ze95NPg57m', logoSrc: '/fluid-compact.png',
   },
+  {
+    name: 'Collective', role: 'Team',
+    description: 'Collective is a Discord security platform focused on helping communities guard against abuse and maintain safer, well-managed servers.',
+    logoSrc: '/collective.png',
+  },
 ]
 
 const projects = [

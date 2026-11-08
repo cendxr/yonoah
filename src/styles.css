@@ -293,7 +293,7 @@ html.open .more { grid-template-rows: 1fr; }
   padding: 24px clamp(40px, 2.25vw, 80px) 0;
   perspective: 1200px;
 }
-.positions { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 1.2vw, 42px); }
+.positions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 1.2vw, 42px); }
 .projects { display: grid; grid-template-columns: 1fr; gap: 18px; min-width: 0; padding-left: clamp(24px, 1.35vw, 48px); border-left: 1px solid var(--rule); }
 .strip::before {
   content: "";
@@ -388,7 +388,7 @@ html.open .position { animation: flip .9s var(--ease) calc(.15s + var(--i) * 80m
   .mark { --wm: clamp(80px, 28vw, 140px); }
   .bio { margin-top: 14px; font-size: 14px; line-height: 1.4; }
   .strip { gap: 20px; padding: 18px 18px 0; }
-  .positions { gap: 18px 16px; }
+  .positions { grid-template-columns: 1fr; gap: 18px 16px; }
   .projects { grid-template-columns: 1fr; gap: 16px; padding-top: 18px; }
   .position { grid-template-columns: 18px minmax(0, 1fr); gap: 6px 8px; }
   .logo { width: 18px; height: 18px; }
