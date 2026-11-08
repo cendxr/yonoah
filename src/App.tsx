@@ -9,24 +9,9 @@ const SONG_FADE_IN_SECONDS = 1.5
 
 const positions = [
   {
-    name: 'Collection', role: 'Team',
-    description: "Collection is a proactive Discord security platform designed to prevent server abuse before it happens. I’m the team member leading product development.",
-    href: 'https://clct.app/', logoSrc: 'https://www.whoisjonah.xyz/media/positions/collection.png',
-  },
-  {
-    name: 'Circle', role: 'Senior Support',
-    description: "An all-in-one Discord bot for moderation, logging, and automation, used in 250,000+ servers. I’m a senior staff member tasked with overseeing the staff team and community.",
-    href: 'https://circlebot.xyz/', logoSrc: 'https://www.whoisjonah.xyz/media/positions/circle.png',
-  },
-  {
-    name: 'Chirper', role: 'Core Team',
-    description: "Chirper is an up-and-coming social media bot which has quickly amassed over 700K members across the 1,500 guilds it serves. I lead development for the website and desktop overlay portions of Chirper.",
-    href: 'https://chirper.app/', logoSrc: 'https://www.whoisjonah.xyz/media/positions/chirper.png',
-  },
-  {
-    name: 'Boomerang', role: 'Software Engineer',
-    description: 'A versatile and customizable app designed to streamline community and staff management. My role includes helping code, test, and plan new features.',
-    href: 'https://bmrg.app/', logoSrc: 'https://www.whoisjonah.xyz/media/positions/boomerang.png',
+    name: 'Fluid Compact', role: 'Team Leader',
+    description: 'Fluid Compact is a design community focused on high-quality graphics, liveries, and general design work. It offers ready-made releases and custom orders, with upcoming bundles bringing together coordinated designs and packages.',
+    href: 'https://discord.gg/Ze95NPg57m', logoSrc: '/fluid-compact.png',
   },
 ]
 
