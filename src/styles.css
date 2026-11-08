@@ -290,7 +290,7 @@ html.open .more { grid-template-rows: 1fr; }
   grid-template-columns: minmax(0, 1fr) minmax(300px, 21vw);
   align-items: start;
   column-gap: clamp(28px, 1.35vw, 48px);
-  padding: 24px clamp(40px, 2.25vw, 80px) 22px;
+  padding: 24px clamp(40px, 2.25vw, 80px) 12px;
   perspective: 1200px;
 }
 .positions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 1.2vw, 42px); }
@@ -371,7 +371,7 @@ html.open .position { animation: flip .9s var(--ease) calc(.15s + var(--i) * 80m
 
 @media (min-width: 641px) and (max-height: 720px) {
   .nav { padding-top: 18px; }
-  .strip { padding: 16px 40px 20px; }
+  .strip { padding: 16px 40px 12px; }
 }
 
 @media (max-width: 960px) {
@@ -387,7 +387,7 @@ html.open .position { animation: flip .9s var(--ease) calc(.15s + var(--i) * 80m
   .hero { padding: 48px 24px 40px; }
   .mark { --wm: clamp(80px, 28vw, 140px); }
   .bio { margin-top: 14px; font-size: 14px; line-height: 1.4; }
-  .strip { gap: 20px; padding: 18px 18px 28px; }
+  .strip { gap: 20px; padding: 18px 18px 12px; }
   .positions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
   .projects { grid-template-columns: 1fr; gap: 16px; padding-top: 18px; }
   .position { grid-template-columns: 18px minmax(0, 1fr); gap: 6px 8px; }
