@@ -26,9 +26,6 @@ const positions = [
 ]
 
 const projects = [
-  { name: 'CaptureMac', description: 'The best game clipping for Mac.', href: 'https://capturemac.dev/', logoSrc: 'https://www.whoisjonah.xyz/media/projects/capturemac.png' },
-  { name: 'Oceanpoint Utilities', description: 'The bot that powers Oceanpoint Roleplay, an ERLC server with over 10,000 members.', href: 'https://discord.gg/oceanpoint', logoSrc: 'https://www.whoisjonah.xyz/media/projects/oceanpoint.png' },
-  { name: 'Image Editor', description: 'Easy & automatic editing for Roblox screenshots.', href: 'https://editor.whoisjonah.xyz/', logoSrc: 'https://www.whoisjonah.xyz/media/projects/image-editor.png' },
   { name: 'Question of the Day', description: 'A simple user app to gain a unique QoTD in any server.', href: 'https://discord.com/oauth2/authorize?client_id=1542174618893426718', logoSrc: 'https://www.whoisjonah.xyz/media/projects/qotd.webp' },
 ]
 
