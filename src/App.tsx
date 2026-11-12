@@ -4,8 +4,8 @@ import { ExperienceStrip } from './components/ExperienceCard'
 const BIO = 'Software developer with a passion for technology, the outdoors, and spending quality time with friends and family.'
 const WORDS = BIO.split(' ')
 const INTRO_CHARS = Array.from("hi, i'm noah")
-const SONG_END_SECONDS = 90
-const SONG_FADE_START_SECONDS = 87
+const SONG_END_SECONDS = 148
+const SONG_FADE_START_SECONDS = 144
 const SONG_FADE_IN_SECONDS = 1.5
 
 const positions = [
@@ -249,8 +249,8 @@ function App() {
         <span className="intro-hint" aria-hidden="true">Music is optional</span>
       </section>
 
-      <audio ref={audioRef} src="/audio/take-it-easy-2013-remaster.mp3" preload="metadata" />
-      {entered && <video className="background-video" autoPlay loop muted playsInline src="/media/pexels-background-1080p.mp4" aria-hidden="true" />}
+      <audio ref={audioRef} src="/audio/dreamy-lofi-piano.mp3" preload="metadata" />
+      <div className="ambient" aria-hidden="true" />
 
       <nav className="nav" inert={!entered || undefined}>
         <div className="who">
