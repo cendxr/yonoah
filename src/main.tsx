@@ -4,13 +4,38 @@ import App from './App'
 import Maintenance from './Maintenance'
 import './styles.css'
 
-// Set to false to bring the full site back.
+// Set to false to bring the full site back for everyone.
 const MAINTENANCE_MODE = true
 
-if (!MAINTENANCE_MODE) document.documentElement.classList.add('gate')
+// SHA-256 of the private preview key (the key itself is not stored in the code).
+const PREVIEW_HASH = 'bb86831f939e001a4e6532e23e21682f904e9d8507e6c9471648a9c265529745'
+const PREVIEW_STORAGE = 'yonoah-preview'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    {MAINTENANCE_MODE ? <Maintenance /> : <App />}
-  </StrictMode>,
-)
+async function sha256(text: string) {
+  const data = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return Array.from(new Uint8Array(data), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function hasPreviewAccess() {
+  const url = new URL(window.location.href)
+  const param = url.searchParams.get('preview')
+  if (param !== null) {
+    url.searchParams.delete('preview')
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+    if (param === 'off') localStorage.removeItem(PREVIEW_STORAGE)
+    else localStorage.setItem(PREVIEW_STORAGE, param)
+  }
+  const saved = localStorage.getItem(PREVIEW_STORAGE)
+  if (!saved || !crypto.subtle) return false
+  return (await sha256(saved)) === PREVIEW_HASH
+}
+
+async function start() {
+  const showSite = !MAINTENANCE_MODE || (await hasPreviewAccess().catch(() => false))
+  if (showSite) document.documentElement.classList.add('gate')
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>{showSite ? <App /> : <Maintenance />}</StrictMode>,
+  )
+}
+
+void start()
