@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { ExperienceStrip } from './components/ExperienceCard'
 
-const BIO = 'i am an american college student. i love the outdoors, spending time with friends and family, and developing software'
+const BIO = 'Software developer with a passion for technology, the outdoors, and spending quality time with friends and family.'
 const WORDS = BIO.split(' ')
 const INTRO_CHARS = Array.from("hi, i'm noah")
 const SONG_END_SECONDS = 90
