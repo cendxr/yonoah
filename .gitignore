@@ -13,3 +13,6 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+# Local design scratch (screenshots, reference frames)
+_scratch/

@@ -3,6 +3,7 @@ import { ExperienceStrip } from './components/ExperienceCard'
 
 const BIO = 'i am an american college student. i love the outdoors, spending time with friends and family, and developing software'
 const WORDS = BIO.split(' ')
+const INTRO_CHARS = Array.from("hi, i'm noah")
 const SONG_END_SECONDS = 90
 const SONG_FADE_START_SECONDS = 87
 const SONG_FADE_IN_SECONDS = 1.5
@@ -25,17 +26,12 @@ const positions = [
   },
 ]
 
-const projects = [
-  { name: 'Question of the Day', description: 'A simple user app to gain a unique QoTD in any server.', href: 'https://discord.com/oauth2/authorize?client_id=1542174618893426718', logoSrc: 'https://www.whoisjonah.xyz/media/projects/qotd.webp' },
-]
-
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 function App() {
   const photoRef = useRef<HTMLSpanElement>(null)
-  const recordRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
@@ -59,26 +55,23 @@ function App() {
   useEffect(() => {
     let cancelled = false
 
-    function placeLabel() {
+    function placePhoto() {
       const photo = photoRef.current
-      const record = recordRef.current
-      if (!photo || !record || enteredRef.current) return
-      photo.style.animation = 'none'
+      if (!photo || enteredRef.current) return
+      const previousTransform = photo.style.transform
       photo.style.transform = 'none'
       const rect = photo.getBoundingClientRect()
-      photo.style.animation = ''
-      photo.style.transform = ''
+      photo.style.transform = previousTransform
       const fx = document.documentElement.clientWidth / 2 - (rect.left + rect.width / 2)
       const fy = document.documentElement.clientHeight / 2 - (rect.top + rect.height / 2)
-      const fs = rect.width > 0 ? (0.64 * record.offsetWidth) / rect.width : 1
       photo.style.setProperty('--fx', `${fx}px`)
       photo.style.setProperty('--fy', `${fy}px`)
-      photo.style.setProperty('--fs', fs.toFixed(3))
+      photo.style.setProperty('--fs', '.78')
     }
 
     function revealIntro() {
       if (cancelled || enteredRef.current) return
-      placeLabel()
+      placePhoto()
       setReady(true)
     }
 
@@ -87,11 +80,11 @@ function App() {
       new Promise((resolve) => window.setTimeout(resolve, 1200)),
     ]).then(revealIntro)
     document.fonts.ready.then(() => {
-      if (!cancelled && !enteredRef.current) placeLabel()
+      if (!cancelled && !enteredRef.current) placePhoto()
     })
 
     function onResize() {
-      if (!cancelled) placeLabel()
+      if (!cancelled) placePhoto()
     }
 
     window.addEventListener('resize', onResize)
@@ -210,7 +203,7 @@ function App() {
     setPlaying(false)
   }
 
-  /** Measured muted path: enter immediately — no drop phase or delay. */
+  /** Silent entry reveals the portfolio immediately without starting playback. */
   function enterMuted(silent = true) {
     if (enteredRef.current) return
     enteredRef.current = true
@@ -231,35 +224,30 @@ function App() {
 
   return (
     <main className="site-shell">
-      <div className="deck" aria-hidden={entered} inert={entered || undefined}>
-        <h2 className="welcome">welcome in</h2>
-        <div className="record" ref={recordRef} />
-        {/* Decorative tonearm — reference marks aria-hidden; deck is pointer-events:none. */}
-        <svg className="arm" viewBox="0 0 100 150" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <circle cx="80" cy="15" r="8" fill="#0b0b0c" strokeWidth="1.4" />
-          <circle cx="80" cy="15" r="3" fill="currentColor" stroke="none" />
-          <path d="M80 15v97l-8 14" strokeWidth="1.4" />
-          <rect x="64" y="124" width="12" height="16" rx="2" transform="rotate(28 70 132)" fill="currentColor" stroke="none" />
-        </svg>
-        <div className="choose">
-          <button className="play-intro" type="button" onClick={enterWithSound} disabled={entered}>
-            <svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="m4 2.7 7 4.3-7 4.3V2.7z" fill="currentColor" /></svg>
-            play
-          </button>
-          <button
-            className="quiet"
-            type="button"
-            onClick={() => enterMuted()}
-            disabled={entered}
-          >
-            <svg className="muted-icon" viewBox="0 0 14 14" width="14" height="14" aria-hidden="true">
-              <path d="M1.5 5.2h2.1L7.2 2.4v9.2L3.6 8.8H1.5V5.2z" fill="currentColor" />
-              <path d="M9.2 5.1 12 8M12 5.1 9.2 8" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-            enter muted
-          </button>
+      <section className="intro-gate" aria-label="Welcome" aria-hidden={entered} inert={entered || undefined}>
+        <div className="intro-inner">
+          <p className="intro-kicker">yonoah</p>
+          <h1 className="intro-title" aria-label="hi, i'm noah">
+            {INTRO_CHARS.map((char, index) => (
+              <span key={index} className="intro-char" style={{ '--c': index } as CSSProperties} aria-hidden="true">
+                {char === ' ' ? '\u00a0' : char}
+              </span>
+            ))}
+          </h1>
+          <p className="intro-sub">A little about me and the communities I'm part of.</p>
+          <div className="intro-actions">
+            <button className="intro-action intro-action-primary" type="button" onClick={() => enterMuted()} disabled={!ready || entered}>
+              Enter
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
+            </button>
+            <button className="intro-action" type="button" onClick={enterWithSound} disabled={!ready || entered}>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 15V4.5l8-1.5V13.5" /><circle cx="6" cy="15" r="2" /><circle cx="14" cy="13.5" r="2" /></svg>
+              Enter with music
+            </button>
+          </div>
         </div>
-      </div>
+        <span className="intro-hint" aria-hidden="true">Music is optional</span>
+      </section>
 
       <audio ref={audioRef} src="/audio/take-it-easy-2013-remaster.mp3" preload="metadata" />
       {entered && <video className="background-video" autoPlay loop muted playsInline src="/media/pexels-background-1080p.mp4" aria-hidden="true" />}
@@ -269,30 +257,6 @@ function App() {
           <button className="music-toggle" type="button" aria-label={playing ? 'mute music' : 'play music'} onClick={playing ? stopMusic : () => startMusic()}>
             {playing ? '▮▮▮' : '♪'}
           </button>
-        </div>
-        <div className="elsewhere">
-          <span>elsewhere</span>
-          <div>
-            <span className="social-link social-link-disabled" aria-label="Discord (not available yet)">
-              <svg className="social-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M19.7 5.2a18.7 18.7 0 0 0-4.6-1.4l-.6 1.2a17.2 17.2 0 0 0-5 0l-.6-1.2a18.7 18.7 0 0 0-4.6 1.4C1.4 9.5.6 13.7 1 17.8a18.8 18.8 0 0 0 5.7 2.9l1.2-1.9-1.9-.9.5-.4c3.7 1.7 7.7 1.7 11.4 0l.5.4-1.9.9 1.2 1.9a18.8 18.8 0 0 0 5.7-2.9c.5-4.8-.8-8.9-3.7-12.6ZM8.7 15.1c-1.1 0-1.9-1-1.9-2.2s.8-2.2 1.9-2.2 1.9 1 1.9 2.2-.8 2.2-1.9 2.2Zm6.6 0c-1.1 0-1.9-1-1.9-2.2s.8-2.2 1.9-2.2 1.9 1 1.9 2.2-.8 2.2-1.9 2.2Z" />
-              </svg>
-              discord
-            </span>
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello%40yonoah.xyz" target="_blank" rel="noreferrer">
-              <svg className="social-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3 6.75A1.75 1.75 0 0 1 4.75 5h14.5A1.75 1.75 0 0 1 21 6.75v10.5A1.75 1.75 0 0 1 19.25 19H4.75A1.75 1.75 0 0 1 3 17.25V6.75Z" stroke="currentColor" strokeWidth="1.7" />
-                <path d="m4 6 8 6.5L20 6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              email
-            </a>
-            <a href="https://github.com/cendxr" target="_blank" rel="noreferrer">
-              <svg className="social-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.08c-3.1.68-3.76-1.32-3.76-1.32-.5-1.3-1.24-1.65-1.24-1.65-1.01-.7.08-.69.08-.69 1.12.08 1.71 1.15 1.71 1.15.99 1.7 2.6 1.21 3.23.93.1-.72.39-1.21.7-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.11-1.45 3.05-1.15 3.05-1.15.61 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.61 5.24-5.1 5.51.4.35.75 1.03.75 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z" />
-              </svg>
-              github
-            </a>
-          </div>
         </div>
       </nav>
 
@@ -337,7 +301,6 @@ function App() {
         <div>
           <section id="experience-panel" className="strip" aria-label="Experience">
             <div className="positions">{positions.map((position) => <ExperienceStrip key={position.name} {...position} />)}</div>
-            <div className="projects">{projects.map((project) => <ExperienceStrip key={project.name} {...project} compact />)}</div>
           </section>
         </div>
       </div>
