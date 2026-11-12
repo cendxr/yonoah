@@ -395,3 +395,16 @@ html.open .position { animation: flip .9s var(--ease) calc(.15s + var(--i) * 80m
     transition-duration: .01ms !important;
   }
 }
+
+.maintenance {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 32px 24px;
+  background: #000;
+  color: #fff;
+}
+.maintenance-inner { max-width: 440px; text-align: center; animation: intro-fade .8s ease both; }
+.maintenance h1 { margin: 0 0 14px; font-size: clamp(24px, 4vw, 32px); font-weight: 600; letter-spacing: -.02em; }
+.maintenance p { margin: 0; color: #8a8a8f; font-size: 15px; line-height: 1.6; }
