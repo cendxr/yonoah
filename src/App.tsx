@@ -250,7 +250,7 @@ function App() {
       </section>
 
       <audio ref={audioRef} src="/audio/take-it-easy-2013-remaster.mp3" preload="metadata" />
-      {entered && <video className="background-video" autoPlay loop muted playsInline src="/media/smoke-background.mp4" aria-hidden="true" />}
+      {entered && <video className="background-video" autoPlay loop muted playsInline src="/media/desert-road.mp4" aria-hidden="true" />}
       <div className="ambient" aria-hidden="true" />
 
       <nav className="nav" inert={!entered || undefined}>
