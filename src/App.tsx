@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { ExperienceStrip } from './components/ExperienceCard'
 import { Player, type PlayerHandle } from './components/Player'
+import { DiscordStatus } from './components/DiscordStatus'
+import { DISCORD_USER_ID } from './config'
 import { tracks } from './tracks'
 
 const BIO = 'Software developer with a passion for technology, the outdoors, and spending quality time with friends and family.'
@@ -430,6 +432,8 @@ function App() {
           </p>
         </div>
       </section>
+
+      <DiscordStatus userId={DISCORD_USER_ID} visible={entered} />
 
       <button
         ref={toggleRef}
