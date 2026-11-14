@@ -2,10 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import Maintenance from './Maintenance'
+import { MAINTENANCE_UNTIL } from './config'
 import './styles.css'
 
 // Set to false to bring the full site back for everyone.
 const MAINTENANCE_MODE = true
+
+// Maintenance only applies until the countdown deadline (src/config.ts).
+const maintenanceActive = () => MAINTENANCE_MODE && Date.now() < Date.parse(MAINTENANCE_UNTIL)
 
 // SHA-256 of the private preview key (the key itself is not stored in the code).
 const PREVIEW_HASH = 'bb86831f939e001a4e6532e23e21682f904e9d8507e6c9471648a9c265529745'
@@ -31,7 +35,7 @@ async function hasPreviewAccess() {
 }
 
 async function start() {
-  const showSite = !MAINTENANCE_MODE || (await hasPreviewAccess().catch(() => false))
+  const showSite = !maintenanceActive() || (await hasPreviewAccess().catch(() => false))
   if (showSite) document.documentElement.classList.add('gate')
   createRoot(document.getElementById('root')!).render(
     <StrictMode>{showSite ? <App /> : <Maintenance />}</StrictMode>,

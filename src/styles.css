@@ -649,6 +649,30 @@ html.open .strip-foot { animation: fade 1s var(--ease) .5s backwards; }
 .maintenance-inner { max-width: 440px; text-align: center; animation: intro-fade .8s ease both; }
 .maintenance h1 { margin: 0 0 14px; font-size: clamp(24px, 4vw, 32px); font-weight: 600; letter-spacing: -.02em; }
 .maintenance p { margin: 0; color: #8a8a8f; font-size: 15px; line-height: 1.6; }
+.maintenance-old { color: #5c5c61 !important; }
+.maintenance-old s { text-decoration-color: rgba(255, 255, 255, .35); text-decoration-thickness: 1px; }
+.maintenance-update { margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .08); }
+.maintenance-label {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 10px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 999px;
+  color: #c9c9ce;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.maintenance-update p { color: #d4d4d8; }
+.maintenance-countdown {
+  margin-top: 18px;
+  color: #fff;
+  font-size: clamp(30px, 6vw, 40px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
 
 /* ---------- Discord status (Lanyard), bottom-left opposite the player ---------- */
 .dc {
