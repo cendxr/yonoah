@@ -224,7 +224,8 @@ export function Player({ tracks, visible, ref }: PlayerProps) {
       />
 
       <div className="player-art">
-        {track.art ? <img src={track.art} alt="" width={52} height={52} /> : <span>{initials(track.title)}</span>}
+        {track.art ? <img src={track.art} alt="" width={96} height={96} /> : <span>{initials(track.title)}</span>}
+        <span className="player-eq" aria-hidden="true"><i /><i /><i /><i /></span>
       </div>
 
       <div className="player-body">
