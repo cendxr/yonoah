@@ -1,14 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
-import { ExperienceStrip } from './components/ExperienceCard'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { Player, type PlayerHandle } from './components/Player'
+import { WorkRow, type Work } from './components/WorkRow'
+import { tracks } from './tracks'
 
 const BIO = 'Software developer with a passion for technology, the outdoors, and spending quality time with friends and family.'
-const WORDS = BIO.split(' ')
-const INTRO_CHARS = Array.from("hi, i'm noah")
-const SONG_END_SECONDS = 90
-const SONG_FADE_START_SECONDS = 87
-const SONG_FADE_IN_SECONDS = 1.5
+const GITHUB = 'https://github.com/cendxr'
 
-const positions = [
+const work: Work[] = [
   {
     name: 'Fluid Compact', role: 'Team Leader',
     description: 'Fluid Compact is a design community focused on high-quality graphics, liveries, and general design work. It offers ready-made releases and custom orders, with upcoming bundles bringing together coordinated designs and packages.',
@@ -26,287 +24,165 @@ const positions = [
   },
 ]
 
+type Stage = 'closed' | 'opening' | 'open'
+
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function App() {
-  const photoRef = useRef<HTMLSpanElement>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
-  const audioRef = useRef<HTMLAudioElement>(null)
-  const toggleRef = useRef<HTMLButtonElement>(null)
-  const openRef = useRef(false)
-  const enteredRef = useRef(false)
-  const [ready, setReady] = useState(false)
-  const [entered, setEntered] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [playing, setPlaying] = useState(false)
+function ArrowUpRight() {
+  return (
+    <svg className="icon" viewBox="0 0 20 20" aria-hidden="true">
+      <path d="M6 14 14 6M7.5 6H14v6.5" />
+    </svg>
+  )
+}
 
-  useLayoutEffect(() => {
-    const root = document.documentElement
-    root.classList.toggle('gate', !entered)
-    root.classList.toggle('set', ready)
-    root.classList.toggle('play', entered && !prefersReducedMotion())
-    root.classList.toggle('open', open)
-    openRef.current = open
-    enteredRef.current = entered
-  }, [entered, ready, open])
+export default function App() {
+  const [ready, setReady] = useState(false)
+  const [stage, setStage] = useState<Stage>('closed')
+  const playerRef = useRef<PlayerHandle>(null)
+  const nameRef = useRef<HTMLHeadingElement>(null)
+  const firstTrack = tracks[0]
 
   useEffect(() => {
     let cancelled = false
-
-    function placePhoto() {
-      const photo = photoRef.current
-      if (!photo || enteredRef.current) return
-      const previousTransform = photo.style.transform
-      photo.style.transform = 'none'
-      const rect = photo.getBoundingClientRect()
-      photo.style.transform = previousTransform
-      const fx = document.documentElement.clientWidth / 2 - (rect.left + rect.width / 2)
-      const fy = document.documentElement.clientHeight / 2 - (rect.top + rect.height / 2)
-      photo.style.setProperty('--fx', `${fx}px`)
-      photo.style.setProperty('--fy', `${fy}px`)
-      photo.style.setProperty('--fs', '.78')
-    }
-
-    function revealIntro() {
-      if (cancelled || enteredRef.current) return
-      placePhoto()
-      setReady(true)
-    }
-
-    Promise.race([
-      document.fonts.ready,
-      new Promise((resolve) => window.setTimeout(resolve, 1200)),
-    ]).then(revealIntro)
-    document.fonts.ready.then(() => {
-      if (!cancelled && !enteredRef.current) placePhoto()
+    Promise.race([document.fonts.ready, new Promise((resolve) => window.setTimeout(resolve, 1200))]).then(() => {
+      if (!cancelled) setReady(true)
     })
-
-    function onResize() {
-      if (!cancelled) placePhoto()
-    }
-
-    window.addEventListener('resize', onResize)
     return () => {
       cancelled = true
-      window.removeEventListener('resize', onResize)
     }
   }, [])
 
   useEffect(() => {
-    if (!entered) return
-    const reveal = window.setTimeout(() => document.documentElement.classList.add('revealed'), 4000)
-    // After gate lifts, move focus into the live page (toggle is always present).
-    window.requestAnimationFrame(() => {
-      toggleRef.current?.focus({ preventScroll: true })
-    })
-    return () => window.clearTimeout(reveal)
-  }, [entered])
+    const root = document.documentElement
+    root.classList.toggle('is-locked', stage !== 'open')
+    if (stage === 'open') nameRef.current?.focus({ preventScroll: true })
+  }, [stage])
 
+  // Gentle rise-in for rows as they scroll into view.
   useEffect(() => {
-    if (!playing) return
-    const media = audioRef.current
-    if (!media) return
-    let animationFrame = 0
-
-    function updatePlayback() {
-      const audio = media!
-      if (audio.paused) return
-      if (audio.currentTime >= SONG_END_SECONDS) {
-        audio.currentTime = 0
-        audio.volume = 0
-      }
-
-      if (audio.currentTime < SONG_FADE_IN_SECONDS) {
-        audio.volume = audio.currentTime / SONG_FADE_IN_SECONDS
-      } else if (audio.currentTime >= SONG_FADE_START_SECONDS) {
-        audio.volume = Math.max(0, (SONG_END_SECONDS - audio.currentTime) / (SONG_END_SECONDS - SONG_FADE_START_SECONDS))
-      } else {
-        audio.volume = 1
-      }
-      animationFrame = window.requestAnimationFrame(updatePlayback)
+    if (stage === 'closed') return
+    const items = document.querySelectorAll<HTMLElement>('[data-reveal]')
+    if (!('IntersectionObserver' in window)) {
+      items.forEach((item) => item.setAttribute('data-shown', ''))
+      return
     }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.setAttribute('data-shown', '')
+          observer.unobserve(entry.target)
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px' },
+    )
+    items.forEach((item) => observer.observe(item))
+    return () => observer.disconnect()
+  }, [stage])
 
-    animationFrame = window.requestAnimationFrame(updatePlayback)
-    return () => window.cancelAnimationFrame(animationFrame)
-  }, [playing])
-
-  useEffect(() => {
-    if (!entered) return
-    const fine = window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)')
-    const img = imgRef.current
-    if (!fine.matches || !img) return
-
-    function onMove(event: PointerEvent) {
-      const x = event.clientX / window.innerWidth - 0.5
-      const y = event.clientY / window.innerHeight - 0.5
-      img!.style.setProperty('--ry', `${(26 * x).toFixed(2)}deg`)
-      img!.style.setProperty('--rx', `${(-26 * y).toFixed(2)}deg`)
-    }
-
-    window.addEventListener('pointermove', onMove)
-    return () => window.removeEventListener('pointermove', onMove)
-  }, [entered])
-
-  useEffect(() => {
-    if (!entered) return
-    let lockedUntil = 0
-
-    function toggle(next: boolean) {
-      if (next === openRef.current || Date.now() < lockedUntil) return
-      openRef.current = next
-      lockedUntil = Date.now() + 800
-      setOpen(next)
-    }
-
-    function onWheel(event: WheelEvent) {
-      if (event.defaultPrevented || Math.abs(event.deltaY) <= 4) return
-      toggle(event.deltaY > 0)
-    }
-
-    let startY = 0
-    let startScroll = 0
-    function onTouchStart(event: TouchEvent) {
-      startY = event.touches[0].clientY
-      startScroll = window.scrollY
-    }
-    function onTouchEnd(event: TouchEvent) {
-      const delta = startY - event.changedTouches[0].clientY
-      if (Math.abs(delta) > 40 && (delta > 0 || startScroll <= 0)) toggle(delta > 0)
-    }
-
-    window.addEventListener('wheel', onWheel, { passive: true })
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend', onTouchEnd)
-    return () => {
-      window.removeEventListener('wheel', onWheel)
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchend', onTouchEnd)
-    }
-  }, [entered])
-
-  function startMusic(restart = false) {
-    const audio = audioRef.current
-    if (!audio) return
-    if (restart || audio.currentTime >= SONG_END_SECONDS) {
-      audio.currentTime = 0
-      audio.volume = 1
-    }
-    audio.muted = false
-    setPlaying(true)
-    void audio.play().catch(() => setPlaying(false))
+  function enter(withSound: boolean) {
+    if (stage !== 'closed') return
+    if (withSound) playerRef.current?.play()
+    setStage('opening')
+    window.setTimeout(() => setStage('open'), prefersReducedMotion() ? 450 : 1700)
   }
 
-  function stopMusic() {
-    audioRef.current?.pause()
-    setPlaying(false)
-  }
-
-  /** Silent entry reveals the portfolio immediately without starting playback. */
-  function enterMuted(silent = true) {
-    if (enteredRef.current) return
-    enteredRef.current = true
-    if (silent) stopMusic()
-    const img = imgRef.current
-    if (img) {
-      const { a, b } = new DOMMatrix(getComputedStyle(img).transform)
-      const angle = (Math.atan2(b, a) * 180) / Math.PI
-      img.style.setProperty('--a', `${(angle + 360) % 360}deg`)
-    }
-    setEntered(true)
-  }
-
-  function enterWithSound() {
-    startMusic(true)
-    enterMuted(false)
-  }
+  const current = work[work.length - 1]
 
   return (
-    <main className="site-shell">
-      <section className="intro-gate" aria-label="Welcome" aria-hidden={entered} inert={entered || undefined}>
-        <div className="intro-inner">
-          <p className="intro-kicker">yonoah</p>
-          <h1 className="intro-title" aria-label="hi, i'm noah">
-            {INTRO_CHARS.map((char, index) => (
-              <span key={index} className="intro-char" style={{ '--c': index } as CSSProperties} aria-hidden="true">
-                {char === ' ' ? '\u00a0' : char}
+    <div className="site" data-stage={stage} data-ready={ready || undefined}>
+      <div className="backdrop" aria-hidden="true">
+        <video className="backdrop-video" autoPlay loop muted playsInline preload="auto" poster="/media/aurora-lake.jpg" src="/media/aurora-lake.mp4" />
+        <div className="backdrop-grade" />
+        <div className="backdrop-light" />
+        <div className="backdrop-grain" />
+      </div>
+
+      <div className="page" inert={stage === 'closed' || undefined}>
+        <header className="topbar">
+          <a className="brand" href="#top">yonoah</a>
+          <nav className="topnav" aria-label="Primary">
+            <a href="#work">Work</a>
+            <a href={GITHUB} target="_blank" rel="noreferrer">GitHub<ArrowUpRight /></a>
+          </nav>
+        </header>
+
+        <main>
+          <section className="hero" id="top" aria-labelledby="name">
+            <div className="hero-now rise" style={{ '--delay': '0.75s' } as CSSProperties}>
+              <img className="avatar" src="/noah-basketball.png" alt="Noah" width={40} height={40} />
+              <span className="hero-now-text">
+                <span className="label">Currently</span>
+                <span>{current.role}, {current.name}</span>
               </span>
-            ))}
-          </h1>
-          <p className="intro-sub">A little about me and the communities I'm part of.</p>
-          <div className="intro-actions">
-            <button className="intro-action intro-action-primary" type="button" onClick={() => enterMuted()} disabled={!ready || entered}>
-              Enter
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
-            </button>
-            <button className="intro-action" type="button" onClick={enterWithSound} disabled={!ready || entered}>
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 15V4.5l8-1.5V13.5" /><circle cx="6" cy="15" r="2" /><circle cx="14" cy="13.5" r="2" /></svg>
-              Enter with music
-            </button>
+            </div>
+
+            <h1 id="name" className="hero-name" ref={nameRef} tabIndex={-1}>
+              <span className="hero-name-line">Noah</span>
+            </h1>
+
+            <div className="hero-foot">
+              <p className="hero-bio rise" style={{ '--delay': '1.05s' } as CSSProperties}>{BIO}</p>
+              <div className="hero-actions rise" style={{ '--delay': '1.2s' } as CSSProperties}>
+                <a className="pill" href="#work">
+                  Selected work
+                  <svg className="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12m-5-5 5 5 5-5" /></svg>
+                </a>
+                <a className="textlink" href={GITHUB} target="_blank" rel="noreferrer">GitHub<ArrowUpRight /></a>
+              </div>
+            </div>
+          </section>
+
+          <section className="work" id="work" aria-labelledby="work-title">
+            <header className="work-head" data-reveal>
+              <h2 id="work-title">Selected work</h2>
+              <span className="label">{String(work.length).padStart(2, '0')} communities</span>
+            </header>
+            <ol className="work-list">
+              {work.map((item, index) => <WorkRow key={item.name} work={item} index={index} />)}
+            </ol>
+          </section>
+        </main>
+
+        <footer className="foot">
+          <span>© {new Date().getFullYear()} Noah</span>
+          <a href={GITHUB} target="_blank" rel="noreferrer">github.com/cendxr</a>
+          <a className="foot-credit" href="https://pixabay.com/videos/lake-aurora-borealis-northern-lights-176989/" target="_blank" rel="noreferrer">Footage · Pixabay</a>
+        </footer>
+      </div>
+
+      <Player ref={playerRef} tracks={tracks} visible={stage !== 'closed'} />
+
+      <section className="curtain" aria-label="Welcome" aria-hidden={stage !== 'closed'} inert={stage !== 'closed' || undefined}>
+        <div className="curtain-half curtain-top">
+          <div className="curtain-title">
+            <span className="label">yonoah</span>
+            <span className="curtain-name">Noah</span>
           </div>
         </div>
-        <span className="intro-hint" aria-hidden="true">Music is optional</span>
+        <div className="curtain-half curtain-bottom">
+          <div className="curtain-actions">
+            <div className="curtain-buttons">
+              <button className="pill pill-solid" type="button" onClick={() => enter(true)} disabled={!ready}>
+                <svg className="icon" viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3Z" /><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" /></svg>
+                Enter with sound
+              </button>
+              <button className="pill" type="button" onClick={() => enter(false)} disabled={!ready}>
+                Enter muted
+              </button>
+            </div>
+            {firstTrack && (
+              <p className="label curtain-note">
+                Soundtrack — {firstTrack.title}, {firstTrack.artist}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="curtain-horizon" aria-hidden="true" />
       </section>
-
-      <audio ref={audioRef} src="/audio/take-it-easy-2013-remaster.mp3" preload="metadata" />
-      {entered && <video className="background-video" autoPlay loop muted playsInline src="/media/desert-road.mp4" aria-hidden="true" />}
-      <div className="ambient" aria-hidden="true" />
-
-      <nav className="nav" inert={!entered || undefined}>
-        <div className="who">
-          <button className="music-toggle" type="button" aria-label={playing ? 'mute music' : 'play music'} onClick={playing ? stopMusic : () => startMusic()}>
-            {playing ? '▮▮▮' : '♪'}
-          </button>
-        </div>
-      </nav>
-
-      <section className="hero" aria-labelledby="page-title" inert={!entered || undefined}>
-        <div className="mark">
-          <h1 id="page-title" className="wordmark" aria-label="Noah">
-            <span className="ch" style={{ '--d': '0s', '--sx': '0.5em' } as CSSProperties}>n</span>
-            <span className="photo" ref={photoRef}>
-              <img ref={imgRef} src="/noah-basketball.png" alt="Noah" width={128} height={128} />
-            </span>
-            <span className="ch" style={{ '--d': '0.05s', '--sx': '-0.5em' } as CSSProperties}>a</span>
-            <span className="ch" style={{ '--d': '0.1s', '--sx': '-0.95em' } as CSSProperties}>h</span>
-          </h1>
-          <p className="bio">
-            <span className="w hand" style={{ '--i': 0 } as CSSProperties}>👋</span>
-            {WORDS.map((word, index) => (
-              <span key={`${word}-${index}`}>
-                {' '}
-                <span className="w" style={{ '--i': index + 1 } as CSSProperties}>{word}</span>
-              </span>
-            ))}
-          </p>
-        </div>
-      </section>
-
-      <button
-        ref={toggleRef}
-        className="toggle experience-toggle"
-        type="button"
-        aria-expanded={open}
-        aria-controls="experience-panel"
-        aria-label={`${open ? 'hide' : 'show'} experience`}
-        onClick={() => setOpen((value) => !value)}
-        tabIndex={entered ? 0 : -1}
-      >
-        <svg className="chevron" viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" focusable="false">
-          <path d="M3.5 6 8 10.5 12.5 6" />
-        </svg>
-      </button>
-
-      <div className="more" inert={!open || undefined}>
-        <div>
-          <section id="experience-panel" className="strip" aria-label="Experience">
-            <div className="positions">{positions.map((position) => <ExperienceStrip key={position.name} {...position} />)}</div>
-          </section>
-        </div>
-      </div>
-    </main>
+    </div>
   )
 }
-
-export default App
