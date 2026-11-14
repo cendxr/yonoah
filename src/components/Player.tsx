@@ -213,7 +213,7 @@ export function Player({ tracks, visible, ref }: PlayerProps) {
   const level = muted ? 0 : volume
 
   return (
-    <aside className="player" data-visible={visible || undefined} data-playing={playing || undefined} aria-label="Music player" inert={!visible || undefined}>
+    <aside className="card player" data-visible={visible || undefined} data-playing={playing || undefined} aria-label="Music player" inert={!visible || undefined}>
       <audio
         ref={audioRef}
         src={track.file}
@@ -223,80 +223,78 @@ export function Player({ tracks, visible, ref }: PlayerProps) {
         onEnded={() => go(1, false)}
       />
 
-      <div className="player-art">
-        {track.art ? <img src={track.art} alt="" width={96} height={96} /> : <span>{initials(track.title)}</span>}
-        <span className="player-eq" aria-hidden="true"><i /><i /><i /><i /></span>
+      <div className="card-head">
+        <span className="card-label">Music</span>
+        {count > 1 && <span className="card-meta">{index + 1} / {count}</span>}
       </div>
 
-      <div className="player-body">
-        <div className="player-row">
-          <div className="player-meta" aria-live="polite">
-            <span className="player-title">{track.title}</span>
-            <span className="player-artist">
-              {track.artist}
-              {count > 1 && <span className="player-count"> · {index + 1}/{count}</span>}
-            </span>
-          </div>
-
-          <div className="player-controls">
-            <button type="button" className="player-btn" aria-label="Previous track" onClick={() => go(-1)}>
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5v10" /><path className="fill" d="M15 5.6v8.8a.6.6 0 0 1-.92.5L8.2 10.5a.6.6 0 0 1 0-1l5.88-4.4a.6.6 0 0 1 .92.5Z" /></svg>
-            </button>
-            <button type="button" className="player-btn player-main" aria-label={playing ? 'Pause' : 'Play'} onClick={playing ? pause : play}>
-              {playing ? (
-                <svg viewBox="0 0 20 20" aria-hidden="true"><rect className="fill" x="5.5" y="4.5" width="3" height="11" rx="1" /><rect className="fill" x="11.5" y="4.5" width="3" height="11" rx="1" /></svg>
-              ) : (
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M6.5 4.9v10.2a.8.8 0 0 0 1.2.68l8.1-5.1a.8.8 0 0 0 0-1.36L7.7 4.22a.8.8 0 0 0-1.2.68Z" /></svg>
-              )}
-            </button>
-            <button type="button" className="player-btn" aria-label="Next track" onClick={() => go(1)}>
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M14.5 5v10" /><path className="fill" d="M5 5.6v8.8a.6.6 0 0 0 .92.5l5.88-4.4a.6.6 0 0 0 0-1l-5.88-4.4A.6.6 0 0 0 5 5.6Z" /></svg>
-            </button>
-          </div>
+      <div className="player-row">
+        <div className="player-art">
+          {track.art ? <img src={track.art} alt="" width={96} height={96} /> : <span>{initials(track.title)}</span>}
+          <span className="player-eq" aria-hidden="true"><i /><i /><i /><i /></span>
         </div>
+        <div className="player-meta" aria-live="polite">
+          <span className="player-title">{track.title}</span>
+          <span className="player-artist">{track.artist}</span>
+        </div>
+        <div className="player-controls">
+          <button type="button" className="player-btn" aria-label="Previous track" onClick={() => go(-1)}>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5v10" /><path className="fill" d="M15 5.6v8.8a.6.6 0 0 1-.92.5L8.2 10.5a.6.6 0 0 1 0-1l5.88-4.4a.6.6 0 0 1 .92.5Z" /></svg>
+          </button>
+          <button type="button" className="player-btn player-main" aria-label={playing ? 'Pause' : 'Play'} onClick={playing ? pause : play}>
+            {playing ? (
+              <svg viewBox="0 0 20 20" aria-hidden="true"><rect className="fill" x="5.5" y="4.5" width="3" height="11" rx="1" /><rect className="fill" x="11.5" y="4.5" width="3" height="11" rx="1" /></svg>
+            ) : (
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M6.5 4.9v10.2a.8.8 0 0 0 1.2.68l8.1-5.1a.8.8 0 0 0 0-1.36L7.7 4.22a.8.8 0 0 0-1.2.68Z" /></svg>
+            )}
+          </button>
+          <button type="button" className="player-btn" aria-label="Next track" onClick={() => go(1)}>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M14.5 5v10" /><path className="fill" d="M5 5.6v8.8a.6.6 0 0 0 .92.5l5.88-4.4a.6.6 0 0 0 0-1l-5.88-4.4A.6.6 0 0 0 5 5.6Z" /></svg>
+          </button>
+        </div>
+      </div>
 
-        <div className="player-row player-timeline">
-          <span className="player-time">{formatTime(time)}</span>
+      <div className="player-timeline">
+        <span className="player-time">{formatTime(time)}</span>
+        <input
+          className="player-range"
+          type="range"
+          min={0}
+          max={duration || 0}
+          step={0.1}
+          value={time}
+          aria-label="Seek"
+          style={{ '--p': `${progress}%` } as CSSProperties}
+          onChange={(event) => {
+            const audio = audioRef.current
+            if (!audio) return
+            audio.currentTime = Number(event.currentTarget.value)
+            setTime(audio.currentTime)
+          }}
+        />
+        <span className="player-time">{formatTime(duration)}</span>
+        <div className="player-volume">
+          <button type="button" className="player-btn player-mute" aria-label={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted((m) => !m)}>
+            {level === 0 ? (
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3Z" /><path d="m13.5 8 4 4m0-4-4 4" /></svg>
+            ) : (
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3Z" /><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" /></svg>
+            )}
+          </button>
           <input
-            className="player-range"
+            className="player-range player-level"
             type="range"
             min={0}
-            max={duration || 0}
-            step={0.1}
-            value={time}
-            aria-label="Seek"
-            style={{ '--p': `${progress}%` } as CSSProperties}
+            max={1}
+            step={0.01}
+            value={level}
+            aria-label="Volume"
+            style={{ '--p': `${level * 100}%` } as CSSProperties}
             onChange={(event) => {
-              const audio = audioRef.current
-              if (!audio) return
-              audio.currentTime = Number(event.currentTarget.value)
-              setTime(audio.currentTime)
+              setVolume(Number(event.currentTarget.value))
+              setMuted(false)
             }}
           />
-          <span className="player-time">{formatTime(duration)}</span>
-          <div className="player-volume">
-            <button type="button" className="player-btn player-mute" aria-label={muted ? 'Unmute' : 'Mute'} onClick={() => setMuted((m) => !m)}>
-              {level === 0 ? (
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3Z" /><path d="m13.5 8 4 4m0-4-4 4" /></svg>
-              ) : (
-                <svg viewBox="0 0 20 20" aria-hidden="true"><path className="fill" d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3Z" /><path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" /></svg>
-              )}
-            </button>
-            <input
-              className="player-range player-level"
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={level}
-              aria-label="Volume"
-              style={{ '--p': `${level * 100}%` } as CSSProperties}
-              onChange={(event) => {
-                setVolume(Number(event.currentTarget.value))
-                setMuted(false)
-              }}
-            />
-          </div>
         </div>
       </div>
     </aside>

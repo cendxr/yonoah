@@ -193,20 +193,28 @@ export function DiscordStatus({ userId, visible }: { userId: string; visible: bo
   }
 
   return (
-    <aside className="dc" data-status={status} data-visible={visible || undefined} data-bare={!line || undefined} aria-label="Discord status" aria-live="polite">
-      <div className="dc-av">
-        <img src={avatar} alt="" width={44} height={44} decoding="async" onError={() => setAvatarFailed(true)} />
-        <span className="dc-dot" />
+    <aside className="card dc" data-status={status} data-visible={visible || undefined} aria-label="Discord status" aria-live="polite">
+      <div className="card-head">
+        <span className="card-label">Discord</span>
+        <span className="dc-status"><i />{STATUS_LABEL[status]}</span>
       </div>
-      <div className="dc-body">
-        <div className="dc-top">
-          <span className="dc-name">{name}</span>
-          <span className="dc-status"><i />{STATUS_LABEL[status]}</span>
+      <div className="dc-row">
+        <div className="dc-av">
+          <img src={avatar} alt="" width={44} height={44} decoding="async" onError={() => setAvatarFailed(true)} />
+          <span className="dc-dot" />
         </div>
-        {line}
-        {meta}
+        <div className="dc-body">
+          <span className="dc-name">{name}</span>
+          {line ?? <span className="dc-idle">{status === 'offline' ? 'Not online right now' : 'No activity right now'}</span>}
+        </div>
+        <Art src={art} />
       </div>
-      <Art src={art} />
+      {meta ?? (
+        <div className="dc-foot">
+          <span>@{user.username}</span>
+          <a href={`https://discord.com/users/${user.id}`} target="_blank" rel="noreferrer">View profile</a>
+        </div>
+      )}
     </aside>
   )
 }
