@@ -8,6 +8,25 @@ const WORDS = BIO.split(' ')
 const INTRO_CHARS = Array.from("hi, i'm noah")
 const GITHUB = 'https://github.com/cendxr'
 const FOOTAGE = 'https://pixabay.com/videos/lake-aurora-borealis-northern-lights-176989/'
+// The "noah" at the end of the greeting flies into the wordmark when you enter.
+const NOAH_AT = INTRO_CHARS.length - 4
+// One curve and one clock for the whole enter transition (mirrors --flow in styles.css).
+const FLOW = 'cubic-bezier(.55, 0, .1, 1)'
+const FLIGHT_MS = 1400
+
+type Flight = { fontSize: number; baseline: number; rects: DOMRect[]; o: HTMLElement }
+
+// Where the text baseline of a single-line heading sits on screen.
+function baselineOf(el: HTMLElement) {
+  const probe = document.createElement('span')
+  probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline'
+  el.appendChild(probe)
+  const y = probe.getBoundingClientRect().top
+  probe.remove()
+  return y
+}
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 
 const positions = [
   {
@@ -36,7 +55,14 @@ function App() {
   const imgRef = useRef<HTMLImageElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const introTitleRef = useRef<HTMLHeadingElement>(null)
+  const markRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const ambientRef = useRef<HTMLDivElement>(null)
+  const glowRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<PlayerHandle>(null)
+  const flightRef = useRef<Flight | null>(null)
+  const wakeRef = useRef<(() => void) | null>(null)
   const openRef = useRef(false)
   const enteredRef = useRef(false)
   const [ready, setReady] = useState(false)
@@ -54,46 +80,83 @@ function App() {
     enteredRef.current = entered
   }, [entered, ready, open])
 
-  // While the gate is up, park the photo at screen centre so it can "land" in the wordmark.
+  // The enter transition, as one shared-element move: the "noah" of the greeting becomes the
+  // wordmark (n, a, h glide into place, the "o" turns into the photo) while the gate dissolves
+  // and the aurora rises behind it. Runs before paint so the first frame already matches the gate.
+  useLayoutEffect(() => {
+    const from = flightRef.current
+    flightRef.current = null
+    const title = titleRef.current
+    const photo = photoRef.current
+    const img = imgRef.current
+    if (!entered || !from || !title || !photo || !img) return
+
+    const root = document.documentElement
+    root.classList.add('flight')
+    const timing: KeyframeAnimationOptions = { duration: FLIGHT_MS, easing: FLOW, fill: 'backwards' }
+    const s = from.fontSize / parseFloat(getComputedStyle(title).fontSize)
+    const bw = baselineOf(title)
+    const moves: Animation[] = []
+    const fly = (el: Element, dx: number, dy: number, scale: number) =>
+      el.animate(
+        [{ transform: `translate3d(${dx}px, ${dy}px, 0) scale(${scale})` }, { transform: 'translate3d(0, 0, 0) scale(1)' }],
+        timing,
+      )
+
+    // Letters: line up each wordmark glyph's centre and baseline with its twin in the greeting.
+    const letters = Array.from(title.querySelectorAll<HTMLElement>('.ch'))
+    const twins = [0, 2, 3]
+    letters.forEach((el, i) => {
+      const src = from.rects[twins[i]]
+      if (!src) return
+      const r = el.getBoundingClientRect()
+      const cs = getComputedStyle(el)
+      const ox = r.left + r.width / 2
+      const oy = r.top + r.height / 2
+      const glyphX = (r.left + parseFloat(cs.paddingLeft) + r.right - parseFloat(cs.paddingRight)) / 2
+      const dx = src.left + src.width / 2 - ox - (glyphX - ox) * s
+      const dy = from.baseline - oy - (bw - oy) * s
+      moves.push(fly(el, dx, dy, s))
+    })
+
+    // Photo: starts as the greeting's "o" and grows into place as the letter melts away.
+    const pr = photo.getBoundingClientRect()
+    const pcx = pr.left + pr.width / 2
+    const pcy = pr.top + pr.height / 2
+    const o = from.rects[1]
+    const startX = o.left + o.width / 2
+    const startY = from.baseline + (pcy - bw) * s
+    moves.push(fly(photo, startX - pcx, startY - pcy, s))
+    photo.animate([{ opacity: 0 }, { opacity: 1 }], { duration: FLIGHT_MS * 0.5, easing: FLOW, fill: 'backwards' })
+    img.animate([{ scale: '1.5' }, { scale: '1.12' }], timing)
+
+    const k = 1 / s
+    const ocx = o.left + o.width / 2
+    const ocy = o.top + o.height / 2
+    from.o.animate(
+      [
+        { transform: 'translate3d(0, 0, 0) scale(1)' },
+        { transform: `translate3d(${pcx - ocx - (startX - ocx) * k}px, ${pcy - ocy - (startY - ocy) * k}px, 0) scale(${k})` },
+      ],
+      { duration: FLIGHT_MS, easing: FLOW, fill: 'forwards' },
+    )
+    from.o.animate([{ opacity: 1 }, { opacity: 0 }], { duration: FLIGHT_MS * 0.45, easing: FLOW, fill: 'forwards' })
+
+    const land = () => root.classList.remove('flight')
+    Promise.all(moves.map((move) => move.finished)).then(land, land)
+  }, [entered])
+
+  // Wait for the font so the greeting never reflows mid-animation.
   useEffect(() => {
     let cancelled = false
-
-    function placePhoto() {
-      const photo = photoRef.current
-      if (!photo || enteredRef.current) return
-      const previousTransform = photo.style.transform
-      photo.style.transform = 'none'
-      const rect = photo.getBoundingClientRect()
-      photo.style.transform = previousTransform
-      const fx = document.documentElement.clientWidth / 2 - (rect.left + rect.width / 2)
-      const fy = document.documentElement.clientHeight / 2 - (rect.top + rect.height / 2)
-      photo.style.setProperty('--fx', `${fx}px`)
-      photo.style.setProperty('--fy', `${fy}px`)
-      photo.style.setProperty('--fs', '.78')
-    }
-
-    function revealIntro() {
-      if (cancelled || enteredRef.current) return
-      placePhoto()
-      setReady(true)
-    }
-
     Promise.race([
       document.fonts.ready,
       new Promise((resolve) => window.setTimeout(resolve, 1200)),
-    ]).then(revealIntro)
-    document.fonts.ready.then(() => {
-      if (!cancelled && !enteredRef.current) placePhoto()
+    ]).then(() => {
+      if (!cancelled && !enteredRef.current) setReady(true)
     })
-
-    function onResize() {
-      if (!cancelled) placePhoto()
-    }
-
-    window.addEventListener('resize', onResize)
     return () => {
       cancelled = true
-      window.removeEventListener('resize', onResize)
     }
   }, [])
 
@@ -107,40 +170,125 @@ function App() {
     return () => window.clearTimeout(reveal)
   }, [entered])
 
-  // Pointer tilt on the photo, eased so it follows rather than snaps.
+  // One rAF loop for every ambient motion, writing transforms straight to the few elements that
+  // move (no layout reads, no global CSS variables). It sleeps as soon as everything settles.
+  //  - pointer: photo tilt + gentle counter-parallax of the wordmark and footage
+  //  - cursor glow: a soft aurora light that trails the pointer (fine pointers only)
+  //  - scroll: the backdrop drifts up and eases in as the drawer opens, with a small nudge per wheel tick
   useEffect(() => {
-    if (!entered) return
-    const fine = window.matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)')
+    if (!entered || prefersReducedMotion()) return
+    const fine = window.matchMedia('(pointer: fine)').matches
     const img = imgRef.current
-    if (!fine.matches || !img) return
+    const mark = markRef.current
+    const video = videoRef.current
+    const ambient = ambientRef.current
+    const glow = fine ? glowRef.current : null
     let tx = 0
     let ty = 0
     let x = 0
     let y = 0
+    let gtx = 0
+    let gty = 0
+    let gx = 0
+    let gy = 0
+    let glowOn = false
+    let progress = 0
+    let kickTarget = 0
+    let kick = 0
     let frame = 0
 
-    function step() {
-      x += (tx - x) * 0.08
-      y += (ty - y) * 0.08
-      img!.style.setProperty('--ry', `${(22 * x).toFixed(2)}deg`)
-      img!.style.setProperty('--rx', `${(-22 * y).toFixed(2)}deg`)
-      document.documentElement.style.setProperty('--px', x.toFixed(3))
-      document.documentElement.style.setProperty('--py', y.toFixed(3))
-      frame = Math.abs(tx - x) + Math.abs(ty - y) > 0.001 ? requestAnimationFrame(step) : 0
+    function progressTarget() {
+      // Phones scroll the page for real; larger screens open the drawer instead.
+      const scrolled = window.innerWidth <= 640 ? clamp(window.scrollY / Math.max(1, window.innerHeight * 0.8), 0, 1) : 0
+      return Math.max(openRef.current ? 1 : 0, scrolled)
     }
 
-    function onMove(event: PointerEvent) {
-      tx = event.clientX / window.innerWidth - 0.5
-      ty = event.clientY / window.innerHeight - 0.5
+    function step() {
+      frame = 0
+      const target = progressTarget()
+      x += (tx - x) * 0.08
+      y += (ty - y) * 0.08
+      gx += (gtx - gx) * 0.12
+      gy += (gty - gy) * 0.12
+      progress += (target - progress) * 0.055
+      kickTarget *= 0.9
+      kick += (kickTarget - kick) * 0.1
+
+      if (fine && img) {
+        img.style.setProperty('--ry', `${(22 * x).toFixed(2)}deg`)
+        img.style.setProperty('--rx', `${(-22 * y).toFixed(2)}deg`)
+      }
+      if (fine && mark) mark.style.transform = `translate3d(${(x * -10).toFixed(2)}px, ${(y * -8).toFixed(2)}px, 0)`
+      if (video) {
+        video.style.transform = `translate3d(${(x * 18).toFixed(2)}px, ${(y * 12 - progress * 22 - kick).toFixed(2)}px, 0) scale(${(1.02 + progress * 0.035).toFixed(4)})`
+      }
+      if (ambient) ambient.style.transform = `translate3d(${(x * -12).toFixed(2)}px, ${(-progress * 44 - kick * 1.8).toFixed(2)}px, 0)`
+      if (glow && glowOn) glow.style.transform = `translate3d(${gx.toFixed(1)}px, ${gy.toFixed(1)}px, 0)`
+
+      const busy =
+        Math.abs(tx - x) + Math.abs(ty - y) > 0.0005 ||
+        (glowOn && Math.abs(gtx - gx) + Math.abs(gty - gy) > 0.3) ||
+        Math.abs(target - progress) > 0.0005 ||
+        Math.abs(kickTarget) + Math.abs(kick) > 0.02
+      if (busy) frame = requestAnimationFrame(step)
+    }
+
+    function wake() {
       if (!frame) frame = requestAnimationFrame(step)
     }
 
-    window.addEventListener('pointermove', onMove)
+    function onMove(event: PointerEvent) {
+      if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return
+      tx = event.clientX / window.innerWidth - 0.5
+      ty = event.clientY / window.innerHeight - 0.5
+      gtx = event.clientX
+      gty = event.clientY
+      if (glow && !glowOn) {
+        glowOn = true
+        gx = gtx
+        gy = gty
+        glow.style.transform = `translate3d(${gx}px, ${gy}px, 0)`
+        glow.dataset.on = ''
+      }
+      wake()
+    }
+
+    function onLeave(event: PointerEvent) {
+      if (event.relatedTarget || !glow) return
+      glowOn = false
+      delete glow.dataset.on
+    }
+
+    function onWheel(event: WheelEvent) {
+      if ((event.target as Element | null)?.closest?.('.player')) return
+      kickTarget = clamp(kickTarget + clamp(event.deltaY, -60, 60) * 0.12, -14, 14)
+      wake()
+    }
+
+    wakeRef.current = wake
+    if (fine) {
+      window.addEventListener('pointermove', onMove, { passive: true })
+      document.addEventListener('pointerout', onLeave)
+    }
+    window.addEventListener('wheel', onWheel, { passive: true })
+    window.addEventListener('scroll', wake, { passive: true })
+    window.addEventListener('resize', wake)
+    wake()
     return () => {
+      wakeRef.current = null
       window.removeEventListener('pointermove', onMove)
+      document.removeEventListener('pointerout', onLeave)
+      window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('scroll', wake)
+      window.removeEventListener('resize', wake)
       cancelAnimationFrame(frame)
     }
   }, [entered])
+
+  // Opening or closing the drawer eases the backdrop along with it.
+  useEffect(() => {
+    wakeRef.current?.()
+  }, [open])
 
   // Wheel, swipe, and keyboard open or close the experience drawer.
   useEffect(() => {
@@ -188,16 +336,26 @@ function App() {
     }
   }, [entered])
 
+  // Snapshot where the greeting's "noah" sits so the wordmark can take off from exactly there.
+  function measureIntro(): Flight | null {
+    const intro = introTitleRef.current
+    if (!intro) return null
+    const chars = Array.from(intro.querySelectorAll<HTMLElement>('.intro-char')).slice(NOAH_AT)
+    if (chars.length !== 4) return null
+    chars.forEach((char) => char.getAnimations().forEach((animation) => animation.finish()))
+    return {
+      fontSize: parseFloat(getComputedStyle(intro).fontSize),
+      baseline: baselineOf(intro),
+      rects: chars.map((char) => char.getBoundingClientRect()),
+      o: chars[1],
+    }
+  }
+
   function enter(withMusic: boolean) {
     if (enteredRef.current) return
     enteredRef.current = true
     if (withMusic) playerRef.current?.play()
-    const img = imgRef.current
-    if (img) {
-      const { a, b } = new DOMMatrix(getComputedStyle(img).transform)
-      const angle = (Math.atan2(b, a) * 180) / Math.PI
-      img.style.setProperty('--a', `${(angle + 360) % 360}deg`)
-    }
+    if (!prefersReducedMotion()) flightRef.current = measureIntro()
     setEntered(true)
   }
 
@@ -206,9 +364,15 @@ function App() {
       <section className="intro-gate" aria-label="Welcome" aria-hidden={entered} inert={entered || undefined}>
         <div className="intro-inner">
           <p className="intro-kicker">yonoah</p>
-          <h1 className="intro-title" aria-label="hi, i'm noah">
+          <h1 className="intro-title" aria-label="hi, i'm noah" ref={introTitleRef}>
             {INTRO_CHARS.map((char, index) => (
-              <span key={index} className="intro-char" style={{ '--c': index } as CSSProperties} aria-hidden="true">
+              <span
+                key={index}
+                className="intro-char"
+                style={{ '--c': index, '--o': NOAH_AT - index } as CSSProperties}
+                data-part={index < NOAH_AT ? 'greet' : index === NOAH_AT + 1 ? 'o' : 'name'}
+                aria-hidden="true"
+              >
                 {char === ' ' ? '\u00a0' : char}
               </span>
             ))}
@@ -231,10 +395,11 @@ function App() {
       </section>
 
       <div className="backdrop" aria-hidden="true">
-        <video className="background-video" autoPlay loop muted playsInline preload="auto" poster="/media/aurora-lake.jpg" src="/media/aurora-lake.mp4" />
+        <video ref={videoRef} className="background-video" autoPlay loop muted playsInline preload="auto" poster="/media/aurora-lake.jpg" src="/media/aurora-lake.mp4" />
         <div className="backdrop-shade" />
       </div>
-      <div className="ambient" aria-hidden="true" />
+      <div className="ambient" ref={ambientRef} aria-hidden="true" />
+      <div className="cursor-glow" ref={glowRef} aria-hidden="true" />
 
       <nav className="nav" inert={!entered || undefined}>
         <Player ref={playerRef} tracks={tracks} visible={entered} />
@@ -245,14 +410,14 @@ function App() {
       </nav>
 
       <section className="hero" aria-labelledby="page-title" inert={!entered || undefined}>
-        <div className="mark">
+        <div className="mark" ref={markRef}>
           <h1 id="page-title" className="wordmark" aria-label="Noah" ref={titleRef} tabIndex={-1}>
-            <span className="ch" style={{ '--d': '0s', '--sx': '0.5em' } as CSSProperties}>n</span>
+            <span className="ch">n</span>
             <span className="photo" ref={photoRef}>
               <img ref={imgRef} src="/noah-avatar.webp" alt="Noah" width={384} height={384} decoding="async" />
             </span>
-            <span className="ch" style={{ '--d': '0.05s', '--sx': '-0.5em' } as CSSProperties}>a</span>
-            <span className="ch" style={{ '--d': '0.1s', '--sx': '-0.95em' } as CSSProperties}>h</span>
+            <span className="ch">a</span>
+            <span className="ch">h</span>
           </h1>
           <p className="bio">
             <span className="w hand" style={{ '--i': 0 } as CSSProperties}>👋</span>
