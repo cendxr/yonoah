@@ -9,7 +9,7 @@ const BIO = 'Software developer with a passion for technology, the outdoors, and
 const WORDS = BIO.split(' ')
 const INTRO_CHARS = Array.from("hi, i'm noah")
 const GITHUB = 'https://github.com/cendxr'
-const FOOTAGE = 'https://pixabay.com/videos/lake-aurora-borealis-northern-lights-176989/'
+const FOOTAGE = 'https://pixabay.com/videos/fog-mountains-road-foggy-dramatic-53358/'
 // The "noah" at the end of the greeting flies into the wordmark when you enter.
 const NOAH_AT = INTRO_CHARS.length - 4
 // One curve and one clock for the whole enter transition (mirrors --flow in styles.css).
@@ -84,7 +84,7 @@ function App() {
 
   // The enter transition, as one shared-element move: the "noah" of the greeting becomes the
   // wordmark (n, a, h glide into place, the "o" turns into the photo) while the gate dissolves
-  // and the aurora rises behind it. Runs before paint so the first frame already matches the gate.
+  // and the backdrop rises behind it. Runs before paint so the first frame already matches the gate.
   useLayoutEffect(() => {
     const from = flightRef.current
     flightRef.current = null
@@ -175,7 +175,7 @@ function App() {
   // One rAF loop for every ambient motion, writing transforms straight to the few elements that
   // move (no layout reads, no global CSS variables). It sleeps as soon as everything settles.
   //  - pointer: photo tilt + gentle counter-parallax of the wordmark and footage
-  //  - cursor glow: a soft aurora light that trails the pointer (fine pointers only)
+  //  - cursor glow: a faint neutral light that trails the pointer (fine pointers only)
   //  - scroll: the backdrop drifts up and eases in as the drawer opens, with a small nudge per wheel tick
   useEffect(() => {
     if (!entered || prefersReducedMotion()) return
@@ -397,7 +397,7 @@ function App() {
       </section>
 
       <div className="backdrop" aria-hidden="true">
-        <video ref={videoRef} className="background-video" autoPlay loop muted playsInline preload="auto" poster="/media/aurora-lake.jpg" src="/media/aurora-lake.mp4" />
+        <video ref={videoRef} className="background-video" autoPlay loop muted playsInline preload="auto" poster="/media/fog-road.jpg" src="/media/fog-road.mp4" />
         <div className="backdrop-shade" />
       </div>
       <div className="ambient" ref={ambientRef} aria-hidden="true" />
